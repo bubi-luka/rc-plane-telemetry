@@ -14,6 +14,7 @@
 
 ### Used libraries
 - [iBusBM](https://github.com/bmellink/IBusBM/)
+- [Adafruit BMP280](https://github.com/adafruit/Adafruit_BMP280_Library)
 **!! Thank you all for your work !!**
 
 ## Installation and Usage
@@ -36,9 +37,6 @@ It is possible to define up to 10 sensors. The available codes are:
 * iBusSensor.addSensor(0xfd); // Servo            [?]   ()
 
 ## Roadmap
-### 0.4.0
-- add gyroscope sensor
-
 ### 0.5.0
 - add compass sensor
 
@@ -49,6 +47,9 @@ It is possible to define up to 10 sensors. The available codes are:
 - add GPS sensor
 
 ## Change Log
+### 0.4.0
+- add gyroscope sensor
+
 ### 0.3.0
 - add altitude sensor
 
