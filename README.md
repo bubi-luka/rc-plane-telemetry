@@ -8,6 +8,7 @@
 - radio receiver TGY-IA6B or similar
 - wires
 - diode 1N4148
+- resistors (1x 10kΩ and 1x 100kΩ)
 
 ### Used libraries
 - [iBusBM](https://github.com/bmellink/IBusBM/)
@@ -31,12 +32,6 @@ It is possible to define up to 10 sensors. The available codes are:
 * iBusSensor.addSensor(0xfd); // Servo            [?]   ()
 
 ## Roadmap
-### 0.1.0
-- add iBUS communication path to send data from Arduino to RC transmitter module
-
-### 0.2.0
-- add external battery voltage sensor
-
 ### 0.3.0
 - add altitude sensor
 
@@ -53,5 +48,8 @@ It is possible to define up to 10 sensors. The available codes are:
 - add GPS sensor
 
 ## Change Log
-### 0.0.1
-- 
+### 0.2.0
+- add external battery voltage sensor
+
+### 0.1.0
+- add iBUS communication path to send data from Arduino to RC transmitter module
