@@ -93,7 +93,7 @@ void setup() {
     delay(500);
   }
 
-  logFile.print(F("Test\tX\tY\tZ\tAltitude\tBattery\tTemperature\tPressure\r\n"));
+  logFile.print(F("Date\tTime\tX Coordinates\tY Coordinates\tAltitude\tTemperature\tPressure\tX axis\tY axis\tZ axis\tBattery\r\n"));
 
   //  logFile.close();
   //  sd.end();
@@ -141,18 +141,31 @@ void loop() {
 
   // Save current data to the SD card
   //*****************************************************************************
-  logFile.print(F("Test\t"));
-  logFile.print(axis_x);
+  logFile.print(F("Date"));
   logFile.print(F("\t"));
-  logFile.print(axis_y);
+  logFile.print(F("Time"));
   logFile.print(F("\t"));
-  logFile.print(axis_z);
+  logFile.print(F("North"));
+  logFile.print(F("\t"));
+  logFile.print(F("East"));
   logFile.print(F("\t"));
   logFile.print(altitude);
   logFile.print(F("\t"));
   logFile.print(sensorBMP280.readTemperature());
   logFile.print(F("\t"));
   logFile.print(sensorBMP280.readPressure());
+  logFile.print(F("\t"));
+  logFile.print(F("Date"));
+  logFile.print(F("\t"));
+  logFile.print(F("Date"));
+  logFile.print(F("\t"));
+  logFile.print(axis_x);
+  logFile.print(F("\t"));
+  logFile.print(axis_y);
+  logFile.print(F("\t"));
+  logFile.print(axis_z);
+  logFile.print(F("\t"));
+  logFile.print(inputVoltage);
   logFile.print(F("\r\n"));
   logFile.flush();
   //*****************************************************************************
