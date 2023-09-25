@@ -12,19 +12,26 @@
 
 // Declare additional libraries
 #include <IBusBM.h>           // Library for iBus telemetry
-#include <Adafruit_BMP280.h>  // Library for BMP-280 senson
+#include <Adafruit_BMP280.h>  // Library for BMP-280  sensor
+#include <MPU6050_light.h>    // Library for MPU-6050 sensor
 
 // Define Arduino pins
 static const int voltagePin = A3;  // Analog 3 => for voltage data
+static const int sdaPin = A3;      // Analog 4 => SDA pin for I2C
+static const int sclPin = A3;      // Analog 5 => SCL pin for I2C
 
 // Define new objects
 IBusBM iBusSensor;             // iBus telecomunication for sensors
 Adafruit_BMP280 sensorBMP280;  // pressure, temperature, altitude
+MPU6050 sensorMPU6050(Wire);   // gyroscope, accelometer
 
 // Define variables
 int inputVoltage = 0;  // battery voltage
 int baseAltitude = 0;  // altitude at the start
 int altitude = 0;      // altitude - from barometer
+int axis_x = 0;        // X axis - from gyro
+int axis_y = 0;        // Y axis - from gyro
+int axis_z = 0;        // Z axis - from gyro
 
 // Define custom functions
 
@@ -54,6 +61,14 @@ void setup() {
   }
   baseAltitude = baseAltitude / 15;
   //*****************************************************************************
+
+  // start MPU 6050 sensor - gyroscope
+  //*****************************************************************************
+  sensorMPU6050.begin();  // start sensor
+  //sensorMPU6050.upsideDownMounting = true;  // MPU6050 is mounted upside-down
+  delay(1000);                  //delay to stabilise the sensor
+  sensorMPU6050.calcOffsets();  // calibration of gyrometer and accelerometer
+  //*****************************************************************************
 }
 
 // Main function, run in a loop
@@ -74,13 +89,21 @@ void loop() {
   altitude = int(sensorBMP280.readAltitude()) - baseAltitude;
   //*****************************************************************************
 
+  // Get data from gyro
+  //*****************************************************************************
+  sensorMPU6050.update();
+  axis_x = map(sensorMPU6050.getAngleX(), -90, 90, 0, 180);
+  axis_y = map(sensorMPU6050.getAngleY(), -90, 90, 0, 180);
+  axis_z = map(sensorMPU6050.getAngleZ(), -90, 90, 0, 359);
+  //*****************************************************************************
+
   // Send gathered data to the remote control unit on the ground
   //*****************************************************************************
   iBusSensor.setSensorMeasurement(1, 655);                                // Temperature				[°C]  (400 + temp * 10)
   iBusSensor.setSensorMeasurement(2, inputVoltage);                       // External Voltage	[V]   ()
   iBusSensor.setSensorMeasurement(3, sensorBMP280.readPressure() / 100);  // Pressure					[hPa] ()
   iBusSensor.setSensorMeasurement(4, altitude);                           // Relative altitude	[m]   ()
-  iBusSensor.setSensorMeasurement(5, 0);                                  // Azimuth						[°]   ()
+  iBusSensor.setSensorMeasurement(5, axis_z);                             // Azimuth						[°]   ()
   iBusSensor.setSensorMeasurement(6, 17);                                 // Speed							[m/s] ()
 
   // send data to iBus

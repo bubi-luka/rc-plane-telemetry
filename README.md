@@ -11,10 +11,13 @@
 - resistors (1x 10kΩ and 1x 100kΩ)
 - perfboard
 - barometric pressure sensor (BMP280)
+- gyroscope and accelerometer sensor (MPU-6050)
 
 ### Used libraries
 - [iBusBM](https://github.com/bmellink/IBusBM/)
 - [Adafruit BMP280](https://github.com/adafruit/Adafruit_BMP280_Library)
+- [MPU6050 Light](https://github.com/rfetick/MPU6050_light)
+
 **!! Thank you all for your work !!**
 
 ## Installation and Usage
