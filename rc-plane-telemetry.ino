@@ -1,12 +1,13 @@
 /* *************************************************************************** *
- * Project Title: 
+ * Project Title: RC plane telemetry
  * 
- * Description: 
+ * Description: A small Arduino project that uses various sensors to gather
+ *              data and sends it back to the user radio control unit.
  *
- * Licence: GPL 3.0
- * Version: 0.0.0
- * created: DD. MM. YYYY
- * by:      FirstName LastName
+ * Licence: GPL 3.0       (details in project file "LICENCE")
+ * Version: 0.0.1         (details in project file "README.md")
+ * created: 25. 09. 2023
+ * by:      Luka Oman
  * *************************************************************************** */
 
 // Declare additional libraries
