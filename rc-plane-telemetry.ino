@@ -5,7 +5,7 @@
  *              data and sends it back to the user radio control unit.
  *
  * Licence: GPL 3.0       (details in project file "LICENCE")
- * Version: 0.3.0         (details in project file "README.md")
+ * Version: 0.5.0         (details in project file "README.md")
  * created: 25. 09. 2023
  * by:      Luka Oman
  * *************************************************************************** */
@@ -14,16 +14,23 @@
 #include <IBusBM.h>           // Library for iBus telemetry
 #include <Adafruit_BMP280.h>  // Library for BMP-280  sensor
 #include <MPU6050_light.h>    // Library for MPU-6050 sensor
+#include <SdFat.h>            // Library for SD card
 
 // Define Arduino pins
 static const int voltagePin = A3;  // Analog 3 => for voltage data
 static const int sdaPin = A3;      // Analog 4 => SDA pin for I2C
 static const int sclPin = A3;      // Analog 5 => SCL pin for I2C
+//static const uint8_t SD_CS_PIN = 4;      // SD card module CS pin
+//static const uint8_t SOFT_MOSI_PIN = 5;  // SD card module  MOSI pin
+//static const uint8_t SOFT_MISO_PIN = 6;  // SD card module  MISO pin
+//static const uint8_t SOFT_CLK_PIN = 7;   // SD card module  SCK/CLK pin
 
 // Define new objects
 IBusBM iBusSensor;             // iBus telecomunication for sensors
 Adafruit_BMP280 sensorBMP280;  // pressure, temperature, altitude
 MPU6050 sensorMPU6050(Wire);   // gyroscope, accelometer
+SdFat sd;                      // SD card formated as FAT16
+File logFile;                  // file that will contain log data
 
 // Define variables
 int inputVoltage = 0;  // battery voltage
@@ -69,6 +76,28 @@ void setup() {
   delay(1000);                  //delay to stabilise the sensor
   sensorMPU6050.calcOffsets();  // calibration of gyrometer and accelerometer
   //*****************************************************************************
+
+  // start SD card
+  //*****************************************************************************
+  // Start communication protocols
+  Serial.begin(115200);  // debugging
+
+  // start SD card
+  while (!sd.begin()) {
+    delay(500);
+  }
+
+  char dateTimeString[13] = "blackbox.log";
+
+  while (!logFile.open(dateTimeString, O_WRITE | O_APPEND | O_CREAT)) {
+    delay(500);
+  }
+
+  logFile.print(F("Test\tX\tY\tZ\tAltitude\tBattery\tTemperature\tPressure\r\n"));
+
+  //  logFile.close();
+  //  sd.end();
+  //*****************************************************************************
 }
 
 // Main function, run in a loop
@@ -100,13 +129,31 @@ void loop() {
   // Send gathered data to the remote control unit on the ground
   //*****************************************************************************
   iBusSensor.setSensorMeasurement(1, 655);                                // Temperature				[°C]  (400 + temp * 10)
-  iBusSensor.setSensorMeasurement(2, inputVoltage);                       // External Voltage	[V]   ()
-  iBusSensor.setSensorMeasurement(3, sensorBMP280.readPressure() / 100);  // Pressure					[hPa] ()
+  iBusSensor.setSensorMeasurement(2, inputVoltage);                       // External Voltage	  [V]   ()
+  iBusSensor.setSensorMeasurement(3, sensorBMP280.readPressure() / 100);  // Pressure					  [hPa] ()
   iBusSensor.setSensorMeasurement(4, altitude);                           // Relative altitude	[m]   ()
   iBusSensor.setSensorMeasurement(5, axis_z);                             // Azimuth						[°]   ()
   iBusSensor.setSensorMeasurement(6, 17);                                 // Speed							[m/s] ()
 
   // send data to iBus
   iBusSensor.loop();
+  //*****************************************************************************
+
+  // Save current data to the SD card
+  //*****************************************************************************
+  logFile.print(F("Test\t"));
+  logFile.print(axis_x);
+  logFile.print(F("\t"));
+  logFile.print(axis_y);
+  logFile.print(F("\t"));
+  logFile.print(axis_z);
+  logFile.print(F("\t"));
+  logFile.print(altitude);
+  logFile.print(F("\t"));
+  logFile.print(sensorBMP280.readTemperature());
+  logFile.print(F("\t"));
+  logFile.print(sensorBMP280.readPressure());
+  logFile.print(F("\r\n"));
+  logFile.flush();
   //*****************************************************************************
 }

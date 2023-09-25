@@ -12,11 +12,13 @@
 - perfboard
 - barometric pressure sensor (BMP280)
 - gyroscope and accelerometer sensor (MPU-6050)
+- SD card reader (preferably micro SD card reader)
 
 ### Used libraries
 - [iBusBM](https://github.com/bmellink/IBusBM/)
 - [Adafruit BMP280](https://github.com/adafruit/Adafruit_BMP280_Library)
 - [MPU6050 Light](https://github.com/rfetick/MPU6050_light)
+- [SDFat](https://github.com/greiman/SdFat)
 
 **!! Thank you all for your work !!**
 
@@ -40,16 +42,16 @@ It is possible to define up to 10 sensors. The available codes are:
 * iBusSensor.addSensor(0xfd); // Servo            [?]   ()
 
 ## Roadmap
-### 0.5.0
-- add compass sensor
-
 ### 0.6.0
-- add SD card reader/writer module to log data
+- add compass sensor
 
 ### 0.7.0
 - add GPS sensor
 
 ## Change Log
+### 0.5.0
+- add SD card reader/writer module to log data
+
 ### 0.4.0
 - add gyroscope sensor
 
