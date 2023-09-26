@@ -20,10 +20,6 @@
 static const int voltagePin = A3;  // Analog 3 => for voltage data
 static const int sdaPin = A3;      // Analog 4 => SDA pin for I2C
 static const int sclPin = A3;      // Analog 5 => SCL pin for I2C
-//static const uint8_t SD_CS_PIN = 4;      // SD card module CS pin
-//static const uint8_t SOFT_MOSI_PIN = 5;  // SD card module  MOSI pin
-//static const uint8_t SOFT_MISO_PIN = 6;  // SD card module  MISO pin
-//static const uint8_t SOFT_CLK_PIN = 7;   // SD card module  SCK/CLK pin
 
 // Define new objects
 IBusBM iBusSensor;             // iBus telecomunication for sensors
@@ -32,17 +28,23 @@ MPU6050 sensorMPU6050(Wire);   // gyroscope, accelometer
 SdFat sd;                      // SD card formated as FAT16
 File logFile;                  // file that will contain log data
 
+// Define static placeholders
+#define fileBaseName "data-"  // define first part of file name
+#define fileBaseExt ".log"    // define the file extension
+
 // Define variables
-int inputVoltage = 0;  // battery voltage
-int baseAltitude = 0;  // altitude at the start
-int altitude = 0;      // altitude - from barometer
-int axis_x = 0;        // X axis - from gyro
-int axis_y = 0;        // Y axis - from gyro
-int axis_z = 0;        // Z axis - from gyro
+int inputVoltage = 0;                                   // battery voltage
+int baseAltitude = 0;                                   // altitude at the start
+int altitude = 0;                                       // altitude - from barometer
+int axis_x = 0;                                         // X axis - from gyro
+int axis_y = 0;                                         // Y axis - from gyro
+int axis_z = 0;                                         // Z axis - from gyro
+const uint8_t fileNameSize = sizeof(fileBaseName) - 1;  // position of numerals in file name
+char fileName[] = fileBaseName "00" fileBaseExt;        // file name string
 
 // Define timers
-unsigned long previousSdTimer = 0;
-static const int intervalSdTimer = 500;
+unsigned long previousSdTimer = 0;       // time of previous write to SD card
+static const int intervalSdTimer = 500;  // interval at which we write data to the card
 
 // Define custom functions
 
@@ -83,25 +85,35 @@ void setup() {
 
   // start SD card
   //*****************************************************************************
+  while (!sd.begin()) {  // we try to start SD card
+    delay(500);          // if we fail we wait set interval and try again
+  }
+
+  // we set new unique file name for each new run, we can create 100 files
+  while (sd.exists(fileName)) {                  // if file name exist we increase file name by 1
+    if (fileName[fileNameSize + 1] != '9') {     // if last numeral is not 9
+      fileName[fileNameSize + 1]++;              // we increase the last numeral by 1
+    } else if (fileName[fileNameSize] != '9') {  // if first numeral is not 9
+      fileName[fileNameSize + 1] = '0';          // we set last numeral as zero
+      fileName[fileNameSize]++;                  // and increase the first numeral by 1
+    } else {                                     // if we have created 100 files
+      fileName[fileNameSize] = '9';              // we set file name to the last possible place
+      fileName[fileNameSize + 1] = '9';          // we set file name to the last possible place
+    }
+  }
+
+  // we create a new file if not exists, else we append data to old file
+  while (!logFile.open(fileName, O_WRITE | O_APPEND | O_CREAT)) {  //we try to open new file
+    delay(500);                                                    // if we fail we wait set interval and try again
+  }
+
+  // print the header row
+  logFile.print(F("Running\tDate\tTime\tX Coordinates\tY Coordinates\tAltitude\tTemperature\tPressure\tX axis\tY axis\tZ axis\tBattery\r\n"));
+  logFile.flush();  // we write the data to the file
+  //*****************************************************************************
+
   // Start communication protocols
   Serial.begin(115200);  // debugging
-
-  // start SD card
-  while (!sd.begin()) {
-    delay(500);
-  }
-
-  char dateTimeString[13] = "blackbox.log";
-
-  while (!logFile.open(dateTimeString, O_WRITE | O_APPEND | O_CREAT)) {
-    delay(500);
-  }
-
-  logFile.print(F("Running\tDate\tTime\tX Coordinates\tY Coordinates\tAltitude\tTemperature\tPressure\tX axis\tY axis\tZ axis\tBattery\r\n"));
-
-  //  logFile.close();
-  //  sd.end();
-  //*****************************************************************************
 }
 
 // Main function, run in a loop
@@ -119,7 +131,7 @@ void loop() {
 
   // Get data from barometer
   //*****************************************************************************
-  altitude = int(sensorBMP280.readAltitude()) - baseAltitude;
+  altitude = int(sensorBMP280.readAltitude()) - baseAltitude;  // value is the difference between base and current altitude
   //*****************************************************************************
 
   // Get data from gyro
@@ -143,9 +155,9 @@ void loop() {
   iBusSensor.loop();
   //*****************************************************************************
 
-  // Save current data to the SD card every 500 ms
+  // Save current data to the SD card every set interval
   //*****************************************************************************
-  if (millis() - previousSdTimer >= intervalSdTimer) {
+  if (millis() - previousSdTimer >= intervalSdTimer) {  // if the difference between previous time and current time is greater than set interval we write data to the card
     logFile.print(millis());
     logFile.print(F("\t"));
     logFile.print(F("Date"));
