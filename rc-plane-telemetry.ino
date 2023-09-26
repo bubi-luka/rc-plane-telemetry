@@ -40,6 +40,10 @@ int axis_x = 0;        // X axis - from gyro
 int axis_y = 0;        // Y axis - from gyro
 int axis_z = 0;        // Z axis - from gyro
 
+// Define timers
+unsigned long previousSdTimer = 0;
+static const int intervalSdTimer = 500;
+
 // Define custom functions
 
 // Initialization function, run only once
@@ -93,7 +97,7 @@ void setup() {
     delay(500);
   }
 
-  logFile.print(F("Date\tTime\tX Coordinates\tY Coordinates\tAltitude\tTemperature\tPressure\tX axis\tY axis\tZ axis\tBattery\r\n"));
+  logFile.print(F("Running\tDate\tTime\tX Coordinates\tY Coordinates\tAltitude\tTemperature\tPressure\tX axis\tY axis\tZ axis\tBattery\r\n"));
 
   //  logFile.close();
   //  sd.end();
@@ -139,34 +143,35 @@ void loop() {
   iBusSensor.loop();
   //*****************************************************************************
 
-  // Save current data to the SD card
+  // Save current data to the SD card every 500 ms
   //*****************************************************************************
-  logFile.print(F("Date"));
-  logFile.print(F("\t"));
-  logFile.print(F("Time"));
-  logFile.print(F("\t"));
-  logFile.print(F("North"));
-  logFile.print(F("\t"));
-  logFile.print(F("East"));
-  logFile.print(F("\t"));
-  logFile.print(altitude);
-  logFile.print(F("\t"));
-  logFile.print(sensorBMP280.readTemperature());
-  logFile.print(F("\t"));
-  logFile.print(sensorBMP280.readPressure());
-  logFile.print(F("\t"));
-  logFile.print(F("Date"));
-  logFile.print(F("\t"));
-  logFile.print(F("Date"));
-  logFile.print(F("\t"));
-  logFile.print(axis_x);
-  logFile.print(F("\t"));
-  logFile.print(axis_y);
-  logFile.print(F("\t"));
-  logFile.print(axis_z);
-  logFile.print(F("\t"));
-  logFile.print(inputVoltage);
-  logFile.print(F("\r\n"));
-  logFile.flush();
+  if (millis() - previousSdTimer >= intervalSdTimer) {
+    logFile.print(millis());
+    logFile.print(F("\t"));
+    logFile.print(F("Date"));
+    logFile.print(F("\t"));
+    logFile.print(F("Time"));
+    logFile.print(F("\t"));
+    logFile.print(F("North"));
+    logFile.print(F("\t"));
+    logFile.print(F("East"));
+    logFile.print(F("\t"));
+    logFile.print(altitude);
+    logFile.print(F("\t"));
+    logFile.print(sensorBMP280.readTemperature());
+    logFile.print(F("\t"));
+    logFile.print(sensorBMP280.readPressure());
+    logFile.print(F("\t"));
+    logFile.print(axis_x);
+    logFile.print(F("\t"));
+    logFile.print(axis_y);
+    logFile.print(F("\t"));
+    logFile.print(axis_z);
+    logFile.print(F("\t"));
+    logFile.print(inputVoltage);
+    logFile.print(F("\r\n"));
+    logFile.flush();
+    previousSdTimer = millis();
+  }
   //*****************************************************************************
 }
