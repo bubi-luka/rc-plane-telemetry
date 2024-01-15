@@ -18,8 +18,8 @@
 
 // Define Arduino pins
 static const int voltagePin = A3;  // Analog 3 => for voltage data
-static const int sdaPin = A3;      // Analog 4 => SDA pin for I2C
-static const int sclPin = A3;      // Analog 5 => SCL pin for I2C
+static const int sdaPin = A4;      // Analog 4 => SDA pin for I2C
+static const int sclPin = A5;      // Analog 5 => SCL pin for I2C
 
 // Define new objects
 IBusBM iBusSensor;             // iBus telecomunication for sensors
@@ -51,6 +51,10 @@ static const int intervalSdTimer = 500;  // interval at which we write data to t
 // Initialization function, run only once
 void setup() {
 
+  // Start communication protocols
+  Serial.begin(9600);  // debugging
+  Serial.println();    // start fresh on a new line
+
   // start iBus comunication
   //*****************************************************************************
   iBusSensor.begin(Serial);  // iBusSensor.begin(Serial, IBUSBM_NOTIMER);
@@ -73,13 +77,14 @@ void setup() {
     delay(250);
   }
   baseAltitude = baseAltitude / 15;
+
   //*****************************************************************************
 
   // start MPU 6050 sensor - gyroscope
   //*****************************************************************************
   sensorMPU6050.begin();  // start sensor
   //sensorMPU6050.upsideDownMounting = true;  // MPU6050 is mounted upside-down
-  delay(1000);                  //delay to stabilise the sensor
+  delay(1000);                  // delay to stabilise the sensor
   sensorMPU6050.calcOffsets();  // calibration of gyrometer and accelerometer
   //*****************************************************************************
 
@@ -111,9 +116,6 @@ void setup() {
   logFile.print(F("Running\tDate\tTime\tX Coordinates\tY Coordinates\tAltitude\tTemperature\tPressure\tX axis\tY axis\tZ axis\tBattery\r\n"));
   logFile.flush();  // we write the data to the file
   //*****************************************************************************
-
-  // Start communication protocols
-  Serial.begin(115200);  // debugging
 }
 
 // Main function, run in a loop
@@ -158,6 +160,7 @@ void loop() {
   // Save current data to the SD card every set interval
   //*****************************************************************************
   if (millis() - previousSdTimer >= intervalSdTimer) {  // if the difference between previous time and current time is greater than set interval we write data to the card
+
     logFile.print(millis());
     logFile.print(F("\t"));
     logFile.print(F("Date"));
@@ -170,9 +173,11 @@ void loop() {
     logFile.print(F("\t"));
     logFile.print(altitude);
     logFile.print(F("\t"));
-    logFile.print(sensorBMP280.readTemperature());
+    logFile.print(sensorMPU6050.getTemp() - 20.5);
     logFile.print(F("\t"));
-    logFile.print(sensorBMP280.readPressure());
+    logFile.print(sensorBMP280.readTemperature() - 5);
+    logFile.print(F("\t"));
+    logFile.print(sensorBMP280.readPressure() / 100);
     logFile.print(F("\t"));
     logFile.print(axis_x);
     logFile.print(F("\t"));
@@ -183,6 +188,45 @@ void loop() {
     logFile.print(inputVoltage);
     logFile.print(F("\r\n"));
     logFile.flush();
+
+    Serial.print(millis());
+    Serial.print(F("\t"));
+    Serial.print(float(inputVoltage) / 100, 2);
+    Serial.print(F(" V\t"));
+    Serial.print(inVol);
+    Serial.print(F(" V\t"));
+    Serial.print(F("Date"));
+    Serial.print(F("\t"));
+    Serial.print(F("Time"));
+    Serial.print(F("\t"));
+    Serial.print(F("North"));
+    Serial.print(F("\t"));
+    Serial.print(F("East"));
+    Serial.print(F("\t"));
+    Serial.print(sensorMPU6050.getTemp());
+    Serial.print(F("\t"));
+    Serial.print(sensorBMP280.readTemperature());
+    Serial.print(F(" °C\t"));
+    Serial.print(sensorBMP280.readPressure() / 100);
+    Serial.print(F(" hPa\t"));
+    Serial.print(sensorBMP280.readAltitude());
+    Serial.print(F(" m\t"));
+    Serial.print(altitude);
+    Serial.print(F(" m\t"));
+    Serial.print(direction[0]);
+    Serial.print(direction[1]);
+    Serial.print(direction[2]);
+    Serial.print(F(" \t"));
+    Serial.print(azimuth);
+    Serial.print(F(" \t"));
+    Serial.print(axis_x);
+    Serial.print(F("\t"));
+    Serial.print(axis_y);
+    Serial.print(F("\t"));
+    Serial.print(axis_z);
+
+    Serial.println();
+
     previousSdTimer = millis();
   }
   //*****************************************************************************
