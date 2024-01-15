@@ -5,7 +5,7 @@
  *              data and sends it back to the user radio control unit.
  *
  * Licence: GPL 3.0       (details in project file "LICENCE")
- * Version: 0.5.0         (details in project file "README.md")
+ * Version: 0.6.0         (details in project file "README.md")
  * created: 25. 09. 2023
  * by:      Luka Oman
  * *************************************************************************** */
@@ -13,6 +13,7 @@
 // Declare additional libraries
 #include <IBusBM.h>           // Library for iBus telemetry
 #include <Adafruit_BMP280.h>  // Library for BMP-280  sensor
+#include <QMC5883LCompass.h>  // Library for *MC-5883L sensor
 #include <MPU6050_light.h>    // Library for MPU-6050 sensor
 #include <SdFat.h>            // Library for SD card
 
@@ -22,11 +23,12 @@ static const int sdaPin = A4;      // Analog 4 => SDA pin for I2C
 static const int sclPin = A5;      // Analog 5 => SCL pin for I2C
 
 // Define new objects
-IBusBM iBusSensor;             // iBus telecomunication for sensors
-Adafruit_BMP280 sensorBMP280;  // pressure, temperature, altitude
-MPU6050 sensorMPU6050(Wire);   // gyroscope, accelometer
-SdFat sd;                      // SD card formated as FAT16
-File logFile;                  // file that will contain log data
+IBusBM iBusSensor;               // iBus telecomunication for sensors
+Adafruit_BMP280 sensorBMP280;    // pressure, temperature, altitude
+QMC5883LCompass sensorHMC5883L;  // compass
+MPU6050 sensorMPU6050(Wire);     // gyroscope, accelometer
+SdFat sd;                        // SD card formated as FAT16
+File logFile;                    // file that will contain log data
 
 // Define static placeholders
 #define fileBaseName "data-"  // define first part of file name
@@ -36,6 +38,8 @@ File logFile;                  // file that will contain log data
 int inputVoltage = 0;                                   // battery voltage
 int baseAltitude = 0;                                   // altitude at the start
 int altitude = 0;                                       // altitude - from barometer
+int azimuth = 0;                                        // azimuth - from compass
+char direction[3];                                      // direction - from compass
 int axis_x = 0;                                         // X axis - from gyro
 int axis_y = 0;                                         // Y axis - from gyro
 int axis_z = 0;                                         // Z axis - from gyro
@@ -77,7 +81,11 @@ void setup() {
     delay(250);
   }
   baseAltitude = baseAltitude / 15;
+  //*****************************************************************************
 
+  // start HMC-5883L - compass
+  //*****************************************************************************
+  sensorHMC5883L.init();
   //*****************************************************************************
 
   // start MPU 6050 sensor - gyroscope
@@ -134,6 +142,14 @@ void loop() {
   // Get data from barometer
   //*****************************************************************************
   altitude = int(sensorBMP280.readAltitude()) - baseAltitude;  // value is the difference between base and current altitude
+  //*****************************************************************************
+
+  // Get data from compass
+  //*****************************************************************************
+  sensorHMC5883L.read();
+
+  azimuth = sensorHMC5883L.getAzimuth();
+  sensorHMC5883L.getDirection(direction, azimuth);
   //*****************************************************************************
 
   // Get data from gyro
