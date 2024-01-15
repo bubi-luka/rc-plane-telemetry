@@ -11,8 +11,9 @@
 - resistors (1x 10kΩ and 1x 100kΩ)
 - perfboard
 - barometric pressure sensor (BMP280)
-- gyroscope and accelerometer sensor (MPU-6050)
 - magnetic compass sensor (HMC-5883L)
+- HobbyWing brushless RPM sensor (HW-BQ2017)
+- gyroscope and accelerometer sensor (MPU-6050)
 - SD card reader (preferably micro SD card reader)
 
 ### Used libraries
@@ -21,21 +22,22 @@
 - [MPU6050 Light](https://github.com/rfetick/MPU6050_light)
 - [SDFat](https://github.com/greiman/SdFat)
 - [QMC5883LCompass] (https://github.com/mprograms/QMC5883LCompass)
-
+- RPM sensor code from https://www.youtube.com/watch?v=DXWKCeGIHgI
 **!! Thank you all for your work !!**
 
 ## Installation and Usage
 1. Create voltage divider
-2. Create perfboard with I2C sensors
-3. Clone the repository
-4. Connect sensors to the Arduino
+2. Create perfboard and connect sensors
+3. Connect perfboard to the Arduino
+4. Clone the repository
 5. Compile and upload the code to the Arduino
-6. Connect the receiver wires for the iBUS (only after uploading the code)
-7. Wait for all the sensors start and GPS connects
-8. Fly and enjoy
+6. Test everything
+7. Connect the receiver wires for the iBUS to the Arduino (only after uploading and testing the code)
+8. Wait for all sensors start
+9. Fly and enjoy
 
 ## Custumizations
-It is possible to define up to 10 sensors. The available codes are:
+It is possible to define up to 10 sensors. Available codes are:
 * iBusSensor.addSensor(0x00); // Internal Voltage [V]   ()
 * iBusSensor.addSensor(0x01); // Temperature      [°C]  (400 + temp * 10)
 * iBusSensor.addSensor(0x02); // Motor rotations  [RPM] ()
@@ -44,10 +46,20 @@ It is possible to define up to 10 sensors. The available codes are:
 * iBusSensor.addSensor(0xfd); // Servo            [?]   ()
 
 ## Roadmap
+### 1.0.0
+- code cleanup
+- removal of code we do not use
+
+###2.0.0
+- ** might never happen **
+- add SD card reader for data logging
+- add GPS for position and speed logging
+- autopilot possiblities
+
+## Change Log
 ### 0.7.0
 - add RPM sensor
 
-## Change Log
 ### 0.6.0
 - add compass sensor
 
