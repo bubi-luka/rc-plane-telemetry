@@ -13,14 +13,10 @@
 - barometric pressure sensor (BMP280)
 - magnetic compass sensor (HMC-5883L)
 - HobbyWing brushless RPM sensor (HW-BQ2017)
-- gyroscope and accelerometer sensor (MPU-6050)
-- SD card reader (preferably micro SD card reader)
 
 ### Used libraries
 - [iBusBM](https://github.com/bmellink/IBusBM/)
 - [Adafruit BMP280](https://github.com/adafruit/Adafruit_BMP280_Library)
-- [MPU6050 Light](https://github.com/rfetick/MPU6050_light)
-- [SDFat](https://github.com/greiman/SdFat)
 - [QMC5883LCompass] (https://github.com/mprograms/QMC5883LCompass)
 - RPM sensor code from https://www.youtube.com/watch?v=DXWKCeGIHgI
 **!! Thank you all for your work !!**
@@ -33,7 +29,7 @@
 5. Compile and upload the code to the Arduino
 6. Test everything
 7. Connect the receiver wires for the iBUS to the Arduino (only after uploading and testing the code)
-8. Wait for all sensors start
+8. Wait for all sensors to start
 9. Fly and enjoy
 
 ## Custumizations
@@ -46,10 +42,6 @@ It is possible to define up to 10 sensors. Available codes are:
 * iBusSensor.addSensor(0xfd); // Servo            [?]   ()
 
 ## Roadmap
-### 1.0.0
-- code cleanup
-- removal of code we do not use
-
 ###2.0.0
 - ** might never happen **
 - add SD card reader for data logging
@@ -57,6 +49,10 @@ It is possible to define up to 10 sensors. Available codes are:
 - autopilot possiblities
 
 ## Change Log
+### 1.0.0
+- code cleanup
+- removal of code we do not use
+
 ### 0.7.0
 - add RPM sensor
 
