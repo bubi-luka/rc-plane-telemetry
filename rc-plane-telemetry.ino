@@ -5,7 +5,7 @@
  *              data and sends it back to the user radio control unit.
  *
  * Licence:   GPL 3.0       (details in project file "LICENCE")
- * Version:   0.9.9         (details in project file "README.md")
+ * Version:   1.0.0         (details in project file "README.md")
  * created:   25. 09. 2023
  * modified:  15. 01. 2024
  * by:        Luka Oman
@@ -28,15 +28,16 @@ Adafruit_BMP280 sensorBMP280;    // pressure, temperature, altitude
 QMC5883LCompass sensorHMC5883L;  // compass
 
 //Define constants
-static const byte motorPoles = 14;    // number of magnets on motor
-static const int rpmDelay = 250;      // delay timer for RPM reporting
-static const int serialDelay = 1000;  // timer for serial console reporting
+static const byte motorPoles = 14;   // number of magnets on motor
+static const int rpmDelay = 250;     // delay timer for RPM reporting
+static const int serialDelay = 500;  // timer for serial console reporting
+static bool iBusDebug = false;       // there can only be one Serial, either for USB port (true) or iBus (false)
 
 // Define variables
 int inputVoltage = 0;           // battery voltage
 int baseAltitude = 0;           // altitude at the start
 int altitude = 0;               // altitude - from barometer
-int azimuth = 0;                // azimuth - from compass
+int azimuth = 0;                // azimuth (in degress) - from compass
 char direction[3];              // direction - from compass
 unsigned long rpmTimer = 0;     // time of previously fired RPM interval
 volatile int rpmCounter = 0;    // count the signals fired from RPM sensor
@@ -50,23 +51,23 @@ void rpmInterrupter() {
   rpmCounter++;
 }
 
-
 // Initialization function, run only once
 void setup() {
 
   // Start communication protocols
-  Serial.begin(9600);  // debugging
-  Serial.println();    // start fresh on a new line
-
-  // start iBus comunication
   //*****************************************************************************
-  iBusSensor.begin(Serial);    // iBusSensor.begin(Serial, IBUSBM_NOTIMER);
-  iBusSensor.addSensor(0x03);  // External Voltage	[V]   ()
-  iBusSensor.addSensor(0x02);  // Speed							[m/s] ()
-  iBusSensor.addSensor(0xfd);  // Relative altitude	[m]   ()
-  iBusSensor.addSensor(0xfd);  // Azimuth						[°]   ()
-  iBusSensor.addSensor(0x01);  // Temperature				[°C]  (400 + temp * 10)
-  iBusSensor.addSensor(0x41);  // Pressure					[hPa] ()
+  if (iBusDebug == true) {       // output is send through USB port to the Serial Monitor
+    Serial.begin(9600);          // debugging
+    Serial.println();            // start fresh on a new line
+  } else {                       // output is send through RX/TX ports to the receiver
+    iBusSensor.begin(Serial);    // iBusSensor.begin(Serial, IBUSBM_NOTIMER);
+    iBusSensor.addSensor(0x03);  // External Voltage	[V]   ()
+    iBusSensor.addSensor(0x02);  // RPM							  [RPM] ()
+    iBusSensor.addSensor(0xfd);  // Relative altitude	[m]   ()
+    iBusSensor.addSensor(0xfd);  // Azimuth						[°]   ()
+    iBusSensor.addSensor(0x01);  // Temperature				[°C]  (400 + temp * 10)
+    iBusSensor.addSensor(0x41);  // Pressure					[hPa] ()
+  }
   //*****************************************************************************
 
   // start BMP-280 sensor - altimeter
@@ -84,6 +85,9 @@ void setup() {
   // start HMC-5883L - compass
   //*****************************************************************************
   sensorHMC5883L.init();
+  sensorHMC5883L.setSmoothing(10, true);
+  sensorHMC5883L.setCalibrationOffsets(-220.00, 386.00, 166.00);
+  sensorHMC5883L.setCalibrationScales(1.06, 0.84, 1.16);
   //*****************************************************************************
 
   // start RPM sensor - interrupt signal code
@@ -108,14 +112,18 @@ void loop() {
 
   // Get data from barometer
   //*****************************************************************************
-  altitude = int(sensorBMP280.readAltitude()) - baseAltitude;  // value is the difference between base and current altitude
+  altitude = int(sensorBMP280.readAltitude() - baseAltitude);  // value is the difference between base and current altitude
   //*****************************************************************************
 
   // Get data from compass
   //*****************************************************************************
   sensorHMC5883L.read();
-  azimuth = sensorHMC5883L.getAzimuth();
-  sensorHMC5883L.getDirection(direction, azimuth);
+  azimuth = sensorHMC5883L.getAzimuth();  // read the sensor
+  azimuth = 180 - azimuth;                // sensor is mounted upside down
+  azimuth = 90 + azimuth;                 // sensor is mounted at 90° angle
+  if (azimuth > 360) {                    // when correcting the angle we get interval 90 - 450
+    azimuth = azimuth - 360;              // angle over 360° is actually from 0° - 90°
+  }
   //*****************************************************************************
 
   // Get data from RPM sensor
@@ -127,42 +135,32 @@ void loop() {
   }
   //*****************************************************************************
 
-  // Send gathered data to the remote control unit on the ground
+  // display sensor data
   //*****************************************************************************
-  iBusSensor.setSensorMeasurement(1, inputVoltage);                               // External Voltage	  [V]   ()
-  iBusSensor.setSensorMeasurement(2, rpmValue);                                   // RPM							  []    ()
-  iBusSensor.setSensorMeasurement(3, altitude);                                   // Relative altitude	[m]   ()
-  iBusSensor.setSensorMeasurement(4, azimuth);                                    // Azimuth						[°]   ()
-  iBusSensor.setSensorMeasurement(1, sensorBMP280.readTemperature() * 10 + 400);  // Temperature				[°C]  (400 + temp * 10)
-  iBusSensor.setSensorMeasurement(3, sensorBMP280.readPressure() / 100);          // Pressure					  [hPa] ()
-  iBusSensor.loop();                                                              // send data to iBus
-  //*****************************************************************************
-
-  // Save current data to the SD card every set interval
-  //*****************************************************************************
-  if (millis() - serialTimer >= serialDelay) {  // if the difference between previous time and current time is greater than set interval we write data to the card
-    Serial.print(millis());
-    Serial.print(F("\t"));
-    Serial.print(float(inputVoltage) / 100, 2);
-    Serial.print(F(" V\t"));
-    Serial.print(rpmValue);
-    Serial.print(F(" RPM\t"));
-    Serial.print(sensorBMP280.readAltitude());
-    Serial.print(F(" m\t"));
-    Serial.print(altitude);
-    Serial.print(F(" m\t"));
-    Serial.print(sensorBMP280.readTemperature());
-    Serial.print(F("° C\t"));
-    Serial.print(sensorBMP280.readPressure() / 100);
-    Serial.print(F(" hPa\t"));
-    Serial.print(azimuth);
-    Serial.print(F(" \t"));
-    Serial.print(direction[0]);
-    Serial.print(direction[1]);
-    Serial.print(direction[2]);
-    Serial.print(F("°"));
-    Serial.println();
-
+  if (millis() - serialTimer >= serialDelay) {  // we use nonblocking delay not to overflow Serial
+    if (iBusDebug == true) {                    // output is send through USB port to the Serial Monitor
+      Serial.print(inputVoltage);
+      Serial.print(F("\t"));
+      Serial.print(int(rpmValue));
+      Serial.print(F("\t"));
+      Serial.print(altitude);
+      Serial.print(F("\t"));
+      Serial.print(azimuth);
+      Serial.print(F("\t"));
+      Serial.print(int(sensorBMP280.readTemperature() * 10) + 400);
+      Serial.print(F("\t"));
+      Serial.print(int(sensorBMP280.readPressure() / 100));
+      Serial.print(F("\t"));
+      Serial.println();
+    } else {                                                                               // output is send through RX/TX ports to the receiver
+      iBusSensor.setSensorMeasurement(1, inputVoltage);                                    // External Voltage	  [V]   ()
+      iBusSensor.setSensorMeasurement(2, int(rpmValue));                                   // RPM							  []    ()
+      iBusSensor.setSensorMeasurement(3, altitude);                                        // Relative altitude	[m]   ()
+      iBusSensor.setSensorMeasurement(4, azimuth);                                         // Azimuth						[°]   ()
+      iBusSensor.setSensorMeasurement(5, int(sensorBMP280.readTemperature() * 10) + 400);  // Temperature				[°C]  (400 + temp * 10)
+      iBusSensor.setSensorMeasurement(6, int(sensorBMP280.readPressure() / 100));          // Pressure					  [hPa] ()
+      iBusSensor.loop();
+    }
     serialTimer = millis();
   }
   //*****************************************************************************
