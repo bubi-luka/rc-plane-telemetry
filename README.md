@@ -15,10 +15,11 @@
 - HobbyWing brushless RPM sensor (HW-BQ2017)
 
 ### Used libraries
-- [iBusBM](https://github.com/bmellink/IBusBM/)
-- [Adafruit BMP280](https://github.com/adafruit/Adafruit_BMP280_Library)
-- [QMC5883LCompass] (https://github.com/mprograms/QMC5883LCompass)
-- RPM sensor code from https://www.youtube.com/watch?v=DXWKCeGIHgI
+- Library for iBus communication: [iBusBM](https://github.com/bmellink/IBusBM/)
+- Library for barometric sensor: [Adafruit BMP280](https://github.com/adafruit/Adafruit_BMP280_Library)
+- Library for compass: [QMC5883LCompass](https://github.com/mprograms/QMC5883LCompass)
+- RPM sensor code from [TheBionicbone](https://www.youtube.com/watch?v=DXWKCeGIHgI)
+
 **!! Thank you all for your work !!**
 
 ## Installation and Usage
@@ -42,8 +43,8 @@ It is possible to define up to 10 sensors. Available codes are:
 * iBusSensor.addSensor(0xfd); // Servo            [?]   ()
 
 ## Roadmap
-###2.0.0
-- ** might never happen **
+### 2.0.0
+*might never happen*
 - add SD card reader for data logging
 - add GPS for position and speed logging
 - autopilot possiblities
